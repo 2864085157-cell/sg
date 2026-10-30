@@ -1,0 +1,1129 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07090d">
+<title>时光代理人 · 定格</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#07090d;color:#e9edf4;font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased}
+#app{position:fixed;inset:0;display:flex;flex-direction:column;overflow:hidden}
+.bgfx{position:absolute;inset:0;pointer-events:none;z-index:0;background:radial-gradient(90% 60% at 50% -10%,rgba(90,150,180,.16),transparent 60%),radial-gradient(70% 50% at 110% 100%,rgba(200,120,70,.12),transparent 60%),linear-gradient(180deg,#06080c,#0b0f16 45%,#080a0e)}
+.bgfx::after{content:"";position:absolute;inset:0;opacity:.045;background-image:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)}
+.screen{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;min-height:0;overflow-y:auto;padding:14px 16px max(14px,env(safe-area-inset-bottom))}
+.screen.lock{overflow:hidden}
+.screen.flow{display:block;overflow-y:auto}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;font-family:inherit}
+.btn{display:block;width:100%;padding:13px;border-radius:14px;background:linear-gradient(180deg,rgba(110,231,215,.14),rgba(110,231,215,.05));border:1px solid rgba(110,231,215,.32);color:#bff5ec;font-size:15px;letter-spacing:.08em;transition:transform .12s,filter .2s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:linear-gradient(180deg,#6ee7d7,#3fb9ad);color:#06231f;font-weight:700;border-color:transparent}
+.btn.ghost{background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);color:#b9c6d4}
+.btn:disabled{opacity:.45}
+
+/* ---------- 标题 ---------- */
+.title-wrap{margin:auto;text-align:center;width:100%;max-width:520px;padding:10px 0}
+.brand{font-size:11px;letter-spacing:.62em;color:#7f93a8;text-indent:.62em}
+.title{font-family:"Songti SC","Noto Serif SC",Georgia,serif;font-size:clamp(30px,9vw,42px);font-weight:700;letter-spacing:.14em;margin:16px 0 8px;background:linear-gradient(180deg,#ffffff,#8fa8bd 70%,#5d7389);-webkit-background-clip:text;background-clip:text;color:transparent;text-indent:.14em}
+.subtitle{font-family:"Songti SC","Noto Serif SC",serif;color:#8aa0b4;letter-spacing:.28em;font-size:12.5px}
+.title-photo{width:132px;height:165px;margin:26px auto 22px;border-radius:4px;background:linear-gradient(180deg,#1b2430,#0d131b);border:1px solid rgba(255,255,255,.09);position:relative;overflow:hidden;transform:rotate(-3deg);box-shadow:0 20px 40px -20px #000}
+.title-photo::after{content:"?";position:absolute;inset:0;display:grid;place-items:center;font-family:"Songti SC",serif;font-size:52px;color:rgba(160,200,220,.22)}
+.title-photo::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,transparent 2px 6px)}
+.hint-line{font-size:11.5px;color:#6d7d8e;line-height:1.8;margin-top:16px}
+.footnote{position:absolute;left:0;right:0;bottom:max(12px,env(safe-area-inset-bottom));text-align:center;font-size:10.5px;color:#4d5a68;letter-spacing:.12em;z-index:1}
+
+/* ---------- 剧情 ---------- */
+.story{margin:0 auto;width:100%;max-width:520px;padding:6px 2px 4px}
+.story .para{font-size:14.5px;line-height:2;color:#c8d4e0;margin-bottom:12px;opacity:0;animation:fadeUp .5s ease forwards}
+.story .dlg{display:flex;margin-bottom:10px;opacity:0;animation:fadeUp .5s ease forwards}
+.story .dlg .name{font-size:11px;color:#6d8296;width:52px;flex:0 0 52px;padding-top:6px;letter-spacing:.06em}
+.story .dlg .txt{flex:1;font-size:14px;line-height:1.85;color:#dce6f0}
+.story .dlg.lu .txt{color:#bfe6f5}
+.story .dlg.cheng .txt{color:#ffd9b8}
+.story .dlg.gu .txt{color:#d8d4e6}
+.story .dlg.qiao .txt{color:#f0c8c8}
+
+/* ---------- 照片 ---------- */
+.ptop{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;letter-spacing:.1em;color:#7d8d9e;padding:0 2px 6px;flex:0 0 auto}
+.ptop b{color:#a9d9d0;font-weight:600}
+.stab{display:flex;align-items:center;gap:5px}
+.stab em{font-style:normal;font-size:9.5px;letter-spacing:.16em;color:#5f6f80}
+.stab i{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.14);display:block}
+.stab i.on{background:#6ee7d7;box-shadow:0 0 8px rgba(110,231,215,.7)}
+.photo{position:relative;width:min(100%,44vh,400px);aspect-ratio:4/5;margin:0 auto 10px;flex:0 0 auto;border-radius:3px;overflow:hidden;background:#0c0f14;box-shadow:0 18px 40px -18px #000,0 0 0 1px rgba(255,255,255,.08),0 0 0 7px #efeae0,0 0 0 9px rgba(0,0,0,.55)}
+.photo svg{position:absolute;inset:0;width:100%;height:100%;display:block;animation:sharpen 1.5s ease both}
+.photo .develop{position:absolute;inset:0;background:#f7f3e9;pointer-events:none;animation:dev 1.3s ease forwards}
+.photo .vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(75% 60% at 50% 45%,transparent 40%,rgba(0,0,0,.42) 100%)}
+.photo .grain{position:absolute;inset:0;pointer-events:none;opacity:.14;mix-blend-mode:overlay;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='140' height='140'><filter id='n'><feTurbulence baseFrequency='0.85' numOctaves='3'/></filter><rect width='140' height='140' filter='url(%23n)' opacity='0.6'/></svg>")}
+.hs{position:absolute;transform:translate(-50%,-50%);width:34px;height:34px;display:grid;place-items:center;border-radius:50%;padding:0}
+.hs .ring{position:absolute;inset:-3px;border-radius:50%;border:1px solid rgba(110,231,215,.65);animation:pulse 2.4s infinite}
+.hs .dot{width:25px;height:25px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;color:#08201d;background:rgba(110,231,215,.92);box-shadow:0 0 12px rgba(110,231,215,.55),0 0 0 1px rgba(0,0,0,.35);animation:pop .3s ease}
+.hs.done .dot{background:rgba(240,246,250,.22);color:#cfe6ea;box-shadow:none;font-size:12px}
+.hs.done .ring{display:none}
+.hs.bad .dot{background:rgba(255,95,109,.92);color:#2b0007;box-shadow:0 0 12px rgba(255,95,109,.5)}
+.hs.bad .ring{border-color:rgba(255,95,109,.7);animation-duration:1.3s}
+.hs.done.bad .dot{background:rgba(255,95,109,.2);color:#ff99a3;box-shadow:none}
+
+.cluebar{display:flex;gap:6px;flex-wrap:wrap;padding:0 2px 8px;flex:0 0 auto;min-height:24px}
+.chip{font-size:10.5px;padding:3px 9px;border-radius:20px;background:rgba(110,231,215,.1);border:1px solid rgba(110,231,215,.25);color:#9fe8dd;animation:pop .3s ease}
+.chip.empty{color:#5b6875;border-color:rgba(255,255,255,.07);background:none}
+
+.chat{display:flex;flex-direction:column;gap:7px;overflow-y:auto;flex:1 1 auto;min-height:64px;padding:2px 2px 4px;scroll-behavior:smooth}
+.msg{padding:8px 11px;border-radius:12px;font-size:13px;line-height:1.6;max-width:93%;animation:pop .25s ease}
+.msg.lu{background:rgba(90,140,180,.13);border:1px solid rgba(120,180,220,.16);border-left:2px solid #6fc3e0;align-self:flex-start;color:#d3e4f1}
+.msg.cheng{background:rgba(255,170,100,.09);border:1px solid rgba(255,170,100,.16);align-self:flex-end;color:#ffdfc2}
+.msg.gu{background:rgba(160,160,190,.1);border:1px solid rgba(160,160,190,.14);align-self:flex-start;color:#d3d3e2}
+.msg.qiao{background:rgba(230,140,140,.09);border:1px solid rgba(230,140,140,.14);align-self:flex-start;color:#f2cccc}
+.msg.obs{background:rgba(255,255,255,.045);color:#c2ccd9;align-self:stretch;max-width:100%;border-left:2px solid rgba(255,255,255,.18);font-size:12.5px}
+.msg.sys{align-self:center;font-size:11.5px;color:#8b9bad;background:none;padding:2px;text-align:center}
+.msg.clue{align-self:center;font-size:11.5px;color:#07241f;background:linear-gradient(180deg,#8af0e2,#5fd6c8);border-radius:20px;padding:4px 13px;font-weight:700;letter-spacing:.04em}
+
+.actions{display:flex;gap:10px;padding-top:8px;flex:0 0 auto}
+.actions .btn{flex:1;padding:12px;font-size:14px}
+
+/* ---------- 弹层 ---------- */
+.modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(3,5,8,.84);backdrop-filter:blur(7px);padding:0 12px max(12px,env(safe-area-inset-bottom));animation:fadeIn .2s ease}
+.sheet{width:100%;max-width:520px;background:linear-gradient(180deg,#141c26,#0c1117);border:1px solid rgba(120,180,220,.16);border-radius:18px;padding:18px 16px 16px;max-height:84vh;overflow-y:auto;animation:up .26s cubic-bezier(.2,.9,.3,1)}
+.sheet .kicker{font-size:10.5px;letter-spacing:.3em;color:#6d8296;margin-bottom:8px}
+.sheet .q{font-family:"Songti SC","Noto Serif SC",serif;font-size:17px;line-height:1.7;color:#eaf2fa;margin-bottom:14px}
+.opt{display:block;width:100%;text-align:left;padding:12px 14px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);color:#cddae7;font-size:13.5px;line-height:1.6;margin-bottom:9px;transition:background .15s,border-color .15s}
+.opt:active{background:rgba(110,231,215,.1)}
+.opt.dim{opacity:.34;text-decoration:line-through}
+.opt.ok{border-color:rgba(110,231,215,.7);background:rgba(110,231,215,.14);color:#bff7ee}
+.sheet .tip{font-size:11.5px;color:#7d8e9f;line-height:1.7;margin-top:4px}
+
+/* ---------- 真相 ---------- */
+.truth{margin:0 auto;width:100%;max-width:520px;padding:6px 0 10px}
+.truth .kicker{font-size:10.5px;letter-spacing:.3em;color:#6d8296;margin-bottom:12px}
+.truth .para{font-family:"Songti SC","Noto Serif SC",serif;font-size:15.5px;line-height:2.05;color:#dbe6f2;margin:0 0 13px;opacity:0;animation:fadeUp .6s ease forwards}
+.truth .para.soft{color:#93a6b8;font-size:14px}
+
+/* ---------- 结局 ---------- */
+.finale{display:flex;flex-direction:column;gap:10px;margin:0 auto;width:100%;max-width:520px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:6px 0 10px}
+.card{padding:11px 6px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);font-size:11.5px;line-height:1.5;color:#c3d0dd;text-align:center;min-height:62px;display:grid;place-items:center;transition:all .18s}
+.card.on{background:rgba(110,231,215,.14);border-color:rgba(110,231,215,.65);color:#c9f7ef;box-shadow:0 0 16px -4px rgba(110,231,215,.5)}
+.card.on::after{content:"✓";display:block;font-size:10px;color:#6ee7d7}
+
+/* ---------- 动效 ---------- */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes pop{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:scale(1)}}
+@keyframes up{from{opacity:0;transform:translateY(26px)}to{opacity:1;transform:none}}
+@keyframes pulse{0%{transform:scale(.86);opacity:.95}70%{transform:scale(1.45);opacity:0}100%{opacity:0}}
+@keyframes dev{0%{opacity:1}55%{opacity:.5}100%{opacity:0}}
+@keyframes sharpen{0%{filter:blur(7px) saturate(.35) brightness(1.25)}100%{filter:none}}
+@keyframes shk{0%,100%{transform:none}20%{transform:translateX(-6px)}40%{transform:translateX(6px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
+body.shk #app{animation:shk .42s ease}
+.fx{position:fixed;inset:0;pointer-events:none;z-index:99}
+.fx.white{background:#fff;animation:fxw .55s ease-out forwards}
+.fx.red{background:radial-gradient(circle at 50% 50%,rgba(255,60,80,.45),rgba(120,0,20,.35));animation:fxa .6s ease-out forwards}
+@keyframes fxw{0%{opacity:.92}100%{opacity:0}}
+@keyframes fxa{0%{opacity:0}18%{opacity:1}100%{opacity:0}}
+.mute{position:absolute;top:10px;right:12px;z-index:5;width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-size:14px;display:grid;place-items:center;opacity:.7}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="bgfx"></div>
+  <div id="screen" class="screen"></div>
+</div>
+<div id="fx" class="fx"></div>
+
+<script>
+/* ============================================================
+   时光代理人 · 定格
+   单文件 H5 剧情解谜游戏
+   ============================================================ */
+
+/* ---------------- 数据 ---------------- */
+
+const CASES = [
+  {
+    no: '01',
+    title: '正午的天台',
+    place: '城南中学 · 教学楼天台',
+    time: '12:07',
+    meta: '监控截图 · 12:07:33',
+    brief: [
+      {w:'lu', t:'第一张。城南中学，教学楼天台，中午十二点零七分。'},
+      {w:'lu', t:'这不是他拍的。是学校那台老监控的截图，被谁翻拍了下来。'},
+      {w:'cheng', t:'所以画质才这么糊。'},
+      {w:'lu', t:'糊一点好。太清楚的照片，会让人以为看见了全部。'},
+      {w:'lu', t:'规矩再说一次：可以看，可以听，不能碰。'},
+      {w:'lu', t:'红色的光点，别点。'},
+      {w:'cheng', t:'知道了知道了，我又不是第一次。'},
+      {w:'gu', t:'……他那天中午，去学校了。'}
+    ],
+    hints: [
+      '别只盯着人。照片里最安静的东西，往往最响。',
+      '地上、栏杆上、门缝里——有人待过的地方，就会留下痕迹。',
+      '两根吸管，是两个人的打算。一个在明处，一个在暗处。'
+    ],
+    hotspots: [
+      {id:'a1', x:31, y:50.5, name:'汽水罐', clue:'两根吸管',
+       text:'栏杆上放着一罐橘子汽水。罐身还挂着水珠，被太阳晒得发亮。罐口插着两根吸管，两根都被咬扁了。',
+       after:'一个人喝汽水，不会插两根吸管。'},
+      {id:'a2', x:64, y:77.5, name:'校服外套', clue:'叠好的外套',
+       text:'一件男式校服外套，叠得整整齐齐，压在台阶上，像在替谁占一个位置。袖口有两道洗不掉的蓝墨水。',
+       after:'叠得这么规整。是准备还给谁，还是留给谁。'},
+      {id:'a3', x:77, y:48, name:'楼梯间的门', clue:'门缝里的影子',
+       text:'楼梯间的门只开了一条缝。缝里有一道很淡的影子，安安静静地站着，没有推门。',
+       after:'……有人在那后面站了很久。'},
+      {id:'a4', x:44.5, y:70, name:'手腕', clue:'十二点零七分',
+       text:'女孩手腕上的表反着光，指针停在十二点零七分。秒针卡在两个刻度之间，像被谁按住了。',
+       after:'照片定住的时间。之后发生的事，没人拍下来。'},
+      {id:'a5', x:37.5, y:66, name:'手机', clue:'没发出去的消息',
+       text:'她手里攥着手机，屏幕亮着。输入框里有一行还没发出去的字：『你到了吗』。光标还在闪。',
+       after:'她也在等人。'},
+      {id:'a6', x:20, y:83.5, name:'花坛', clue:'男生的鞋印',
+       text:'花坛边有一朵被踩歪的蒲公英。旁边留着半个鞋印，尺码不小，是男生的鞋。',
+       after:'脚印通到那扇门，没通向别处。'},
+      {id:'ax', x:93, y:49, name:'门把手', bad:true,
+       text:'你伸手去碰门把手——时间线猛地一颤，画面像被水泡过一样晃了一下。',
+       after:'别动那扇门。它一辈子都没被推开过。你推开它，她就会回头；她一回头，这孩子的一辈子都会不一样。'}
+    ],
+    question: '十二点零七分，天台上有几个人？',
+    options: [
+      {t:'一个。照片里只有她的背影。', ok:false, fb:'照片只拍到了光能照到的地方。'},
+      {t:'两个。另一个人站在门后，一直没有推门。', ok:true},
+      {t:'三个。还有一个人在教学楼下面。', ok:false, fb:'楼下没有影子，也没有脚印通向楼下。'},
+      {t:'说不准，也许一个都没有。', ok:false, fb:'别用「也许」交差。委托人要的是答案。'}
+    ],
+    truth: [
+      '顾迟那天中午上了楼。',
+      '他在楼梯间听见她在打电话，笑着说：「我在等人啊，他马上就到。」',
+      '他停在门口，手放在门把上，放了很久，最后没有推开。',
+      '他把校服外套叠好放在台阶上，把汽水放在栏杆上，插了两根吸管。',
+      '他想，如果她回头，我就出去。',
+      '十二点零七分，她低头看了一眼手机。输入框里那行字，还是没发出去。',
+      '十二点四十，他下楼，走了。那罐汽水一直放着，晒到温热。'
+    ],
+    tail: '她等的，从来不是别人。',
+    after: [
+      {k:'p', t:'照片消失的时候，顾晚的手一直在抖。'},
+      {k:'gu', t:'……原来那天他不是一个人。'},
+      {k:'gu', t:'我以为他一直都是一个人。'},
+      {k:'lu', t:'第二张。这一张，是他自己拍的。'},
+      {k:'cheng', t:'他拍的东西，可比监控清楚多了。'},
+      {k:'lu', t:'清楚的照片更容易骗人。倒影里的东西，不一定在原地。'}
+    ]
+  },
+
+  {
+    no: '02',
+    title: '雨夜的便利店',
+    place: '城南 · 24小时便利店',
+    time: '23:47',
+    meta: '手机照片 · 23:47',
+    brief: [
+      {w:'lu', t:'第二张，是他自己拍的。'},
+      {w:'lu', t:'午夜前的便利店，玻璃上有他的倒影。'},
+      {w:'cheng', t:'这张清楚多了。'},
+      {w:'lu', t:'清楚的照片更容易骗人。倒影里的东西，不一定在原地。'},
+      {w:'gu', t:'这张……是我离家出走的第三天。'},
+      {w:'lu', t:'那就看着。先别说话。'}
+    ],
+    hints: [
+      '先分清楚：哪些东西在店里，哪些东西只存在于玻璃上。',
+      '小票、伞架、柜台上的东西——物件会替人记事。',
+      '两瓶热的，一把借来的伞。他要照顾的人，就在他用眼睛够得到的地方。'
+    ],
+    hotspots: [
+      {id:'b1', x:29, y:74, name:'两瓶牛奶', clue:'两瓶热牛奶',
+       text:'柜台上并排放着两瓶热牛奶。标签都朝着镜头，摆得很正，像在等两个人来拿。瓶身还在冒白气。',
+       after:'买了两瓶。可他一个人。'},
+      {id:'b2', x:72, y:72, name:'小票', clue:'便利店的小票',
+       text:'柜台边压着一张小票，被风吹起一角。上面印着：23:47，热牛奶 ×2，借伞 ×1。',
+       after:'他借了一把伞。'},
+      {id:'b3', x:81, y:44, name:'玻璃上的字', clue:'玻璃上的字',
+       text:'玻璃起了一层雾，被人用手指写过一个字。雨水冲淡了它，只剩左边一半——看上去像「回」。',
+       after:'写得很慢。写完，又擦掉了一半。'},
+      {id:'b4', x:15, y:42, name:'雨里的人影', clue:'雨里的人影',
+       text:'玻璃外面，雨里站着一个人。抱着书包，没有打伞，站姿很僵，像已经站了很久很久。',
+       after:'她在看店里。或者，在看店里的人。'},
+      {id:'b5', x:83, y:60, name:'伞架', clue:'空掉的伞架',
+       text:'门口的伞架空了一格。地上有一圈干净的水痕，形状是一个人的双脚。他在这里停过。',
+       after:'伞架上原本插着店里的备用伞。'},
+      {id:'b6', x:62, y:26, name:'倒影里的手机', clue:'输到一半的号码',
+       text:'玻璃深处是他自己的倒影。他举着手机，屏幕停在拨号界面——号码输到一半，最后一个数字空着。',
+       after:'差一个数字。他按不下去。'},
+      {id:'bx', x:93, y:42, name:'玻璃门', bad:true,
+       text:'你伸手去推那扇玻璃门——雨声忽然停了半秒，连霓虹都暗了一下。',
+       after:'别开。她一抬头就会看见他。那一晚她必须一个人走回家，不然她永远学不会自己撑伞。'}
+    ],
+    question: '他为什么买了两瓶牛奶，却只带走了一把伞？',
+    options: [
+      {t:'因为他在等人，那个人没有来，两瓶都是他自己的。', ok:false, fb:'那个人来了。雨里站着呢。'},
+      {t:'因为一瓶给了雨里的人，伞也给了她，他自己淋着回去。', ok:true},
+      {t:'因为店员算错了钱，多给了一瓶。', ok:false, fb:'小票上写得清清楚楚：×2。'},
+      {t:'因为另一瓶是留给店员的。', ok:false, fb:'店员那晚没喝过热的。'}
+    ],
+    truth: [
+      '那是妹妹离家的第三天。',
+      '他在便利店门口看见她的时候，她站在雨里，抱着书包，不肯进来。',
+      '他买了两瓶热牛奶，把伞塞进她手里：「先回家。我随后就到。」',
+      '她问：「你不走吗？」他说：「我结完账就来。」',
+      '他在玻璃上写了一个字，被雨冲淡了一半——是个「回」字。',
+      '她撑着伞走远了。他站在门里一直看着，看到那把伞拐过街角。',
+      '那瓶没送出去的牛奶，他握在手里，握到凉。',
+      '号码输到最后一个数字，他停下了。因为他一开口，就会让她听见自己在哭。'
+    ],
+    tail: '那天他没有追出去。那是他唯一一次，忍住。',
+    after: [
+      {k:'p', t:'顾晚低着头，很久没有说话。'},
+      {k:'gu', t:'那天晚上我回到家，把伞靠在门口。'},
+      {k:'gu', t:'第二天早上，伞不见了，鞋柜上多了一瓶牛奶。'},
+      {k:'gu', t:'我以为……是他顺手拿走的。'},
+      {k:'p', t:'陆光把第三张照片推过来。照片很旧，边角发黄，却拍得很亮。'},
+      {k:'lu', t:'最后一张。不是他拍的。'},
+      {k:'cheng', t:'谁拍的？'},
+      {k:'lu', t:'是我。三个月前，他来过这里。'}
+    ]
+  },
+
+  {
+    no: '03',
+    title: '快门按下之前',
+    place: '时光照相馆 · 暗房外',
+    time: '18:20',
+    meta: '拍立得 · 三个月前',
+    brief: [
+      {w:'lu', t:'三个月前，他推开过这扇门。'},
+      {w:'lu', t:'留下一个信封，付了钱，说了一句话。'},
+      {w:'lu', t:'「如果有一天，有个女孩带着我的名字来找答案，就把这个给她。」'},
+      {w:'gu', t:'……'},
+      {w:'cheng', t:'那你为什么现在才拿出来？'},
+      {w:'lu', t:'因为规矩。照片只能看过去，不能提前替人说未来。'},
+      {w:'lu', t:'现在她来了。进去吧。'},
+      {w:'lu', t:'这一张不用改变什么。你只需要看清楚。'}
+    ],
+    hints: [
+      '这一张里，所有的东西都是新的。新的照片，新的糖，新的日期。',
+      '看看他站的位置。他不是随便站的。',
+      '他花了十秒钟，把自己留在了这面墙上。'
+    ],
+    hotspots: [
+      {id:'c1', x:28, y:46, name:'照片墙', clue:'还没干的照片',
+       text:'一整面墙，挂满了来过这里的人。每一张都在笑。最下面一排多了一张新的，边角还翘着，药水没干透。',
+       after:'是他自己的。他请我挂上去。'},
+      {id:'c2', x:60, y:60, name:'相机', clue:'刚合上的快门',
+       text:'柜台上的老相机还带着余温。快门帘刚刚合上，空气里有一点镁粉的味道。',
+       after:'按下快门的人是他自己。定时器，十秒。'},
+      {id:'c3', x:41, y:73, name:'纸条', clue:'对折的纸条',
+       text:'柜台上压着一张对折的纸条，字迹很轻：「如果有人带着三张照片来问答案，就把这张给他。」',
+       after:'他写这张纸条的时候，手在抖。'},
+      {id:'c4', x:68, y:9, name:'日历', clue:'停在三月的日历',
+       text:'墙上的日历停在三月的第十四天。那天以后，没有人再撕过一页。',
+       after:'三个月了。'},
+      {id:'c5', x:81, y:45, name:'暗房的门', clue:'暗房里的底片',
+       text:'暗房的门缝里透出红光。里面还挂着一条没取下来的底片，被穿堂风吹得轻轻晃。',
+       after:'底片上是他。他没让我冲。'},
+      {id:'c6', x:22, y:77, name:'水果糖', clue:'橘子味的糖',
+       text:'柜台上放着一颗橘子味的水果糖。糖纸被仔细抚平过，压在相框底下，像留给下一个进门的人。',
+       after:'他留下的。说给下一个推门进来的人。'},
+      {id:'cx', x:94, y:52, name:'门把手', bad:true,
+       text:'你伸手去拉那扇门——风铃轻轻响了一下，照片里的时间抖了抖。',
+       after:'别开。外面天已经黑了。他必须留在这张照片里，一个人，把那十秒数完。'}
+    ],
+    question: '他为什么把最后一张照片，留在这里？',
+    options: [
+      {t:'因为这里是他最喜欢的地方。', ok:false, fb:'他来这里是为了做一件事，不是为了怀旧。'},
+      {t:'因为他想让来问答案的人，看见他笑过一次。', ok:true},
+      {t:'因为他付了钱，忘了把照片带走。', ok:false, fb:'他是付了钱，让照片留在这里。'},
+      {t:'因为他想让人回到过去救他。', ok:false, fb:'他进门说的第一句话是：我不需要改变什么。'}
+    ],
+    truth: [
+      '三个月前，他推开这扇门，把三张照片放在柜台上。',
+      '他说：「我不需要改变什么。我只想知道答案。」',
+      '我说：照片只能看过去，不能看未来。',
+      '他说：「那就够了。」',
+      '他借了相机，定了十秒，跑到那面墙前面站好，笑了一下。',
+      '快门响的时候，门口的风铃也响了。',
+      '他付了钱，留下一张纸条，和一颗橘子味的糖。',
+      '他出门的时候，天还没有黑。'
+    ],
+    tail: '那面墙上的照片，都还亮着。',
+    after: [
+      {k:'p', t:'顾晚把三张照片一张一张收进信封，手指在最后一张上停了很久。'},
+      {k:'gu', t:'……他还好吗？'},
+      {k:'gu', t:'他最后那几天，过得好吗？'},
+      {k:'lu', t:'这个问题，照片答不了。'},
+      {k:'lu', t:'照片只能给你证据。答案要你自己拼。'},
+      {k:'cheng', t:'程小时，过来。'},
+      {k:'cheng', t:'……这次，我们一起。'}
+    ]
+  }
+];
+
+const FINALE_CARDS = [
+  {id:'a3', name:'门缝里的影子', ok:true},
+  {id:'a1', name:'两根吸管', ok:false},
+  {id:'a4', name:'十二点零七分', ok:false},
+  {id:'b1', name:'两瓶热牛奶', ok:true},
+  {id:'b3', name:'玻璃上的字', ok:false},
+  {id:'b5', name:'空掉的伞架', ok:false},
+  {id:'c1', name:'还没干的照片', ok:true},
+  {id:'c6', name:'橘子味的糖', ok:false},
+  {id:'c4', name:'停在三月的日历', ok:false}
+];
+
+const FINALE_LINES = {
+  a3: '「两个人。他站的那扇门，一直没有被推开。」',
+  b1: '「他把伞和一瓶热的牛奶，留给了一个淋雨的人。」',
+  c1: '「他借了十秒钟，留在这面墙上，笑了一次。」'
+};
+
+const PROLOGUE = [
+  {k:'p', t:'雨下了一整夜。'},
+  {k:'p', t:'时光照相馆的招牌坏了一格，只剩下半个「时」字在闪。'},
+  {k:'p', t:'门被推开的时候，挂在门口的风铃响了一声，很短。'},
+  {k:'p', t:'进来的女孩穿着校服，怀里抱着一个牛皮纸信封。信封的边角，已经被捏软了。'},
+  {k:'gu', t:'我听说……这里能看见过去。'},
+  {k:'qiao', t:'能看见。但改变不了。'},
+  {k:'gu', t:'我不要改变。我只想知道答案。'},
+  {k:'p', t:'她把三张照片放在柜台上，一张一张摆正，像在摆一件很轻、又很重的礼物。'},
+  {k:'gu', t:'他叫顾迟。三个月前，出了一场意外。'},
+  {k:'gu', t:'我想知道，他最后那几天，过得好不好。'},
+  {k:'p', t:'陆光把三张照片拿起来，看了很久。久到窗外的雨都换了一种下法。'},
+  {k:'lu', t:'……接。'},
+  {k:'cheng', t:'你连价钱都没问。'},
+  {k:'lu', t:'这单不收钱。'}
+];
+
+/* ---------------- 场景绘制 ---------------- */
+
+let RAIN2 = (function(){
+  let s = '';
+  for (let i = 0; i < 46; i++) {
+    const x = Math.floor(Math.random() * 900) - 40;
+    const y = Math.floor(Math.random() * 700) - 60;
+    const l = 40 + Math.floor(Math.random() * 90);
+    s += '<line x1="' + x + '" y1="' + y + '" x2="' + (x - 16) + '" y2="' + (y + l) + '"/>';
+  }
+  return s;
+})();
+
+function wall3(){
+  let s = '';
+  const cols = 5, rows = 4, w = 78, h = 88, gx = 98, gy = 96, x0 = 64, y0 = 170;
+  const tones = ['#7c7059', '#6b6152', '#867861', '#5e574a'];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const x = x0 + c * gx, y = y0 + r * gy;
+      const t = tones[(r * cols + c) % 4];
+      s += '<g><rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + h + '" fill="#efe6d2"/>'
+         + '<rect x="' + (x + 5) + '" y="' + (y + 5) + '" width="' + (w - 10) + '" height="' + (h - 10) + '" fill="' + t + '"/>'
+         + '<circle cx="' + (x + w / 2) + '" cy="' + (y + 34) + '" r="11" fill="#f0e6d2" opacity=".22"/>'
+         + '<path d="M' + (x + 12) + ' ' + (y + h - 12) + ' q' + (w / 2 - 12) + ' -26 ' + (w - 24) + ' 0 z" fill="#f0e6d2" opacity=".14"/></g>';
+    }
+  }
+  return s;
+}
+
+const SCENES = [
+  /* ---- 场景一：正午天台 ---- */
+  '<svg viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+  + '<defs>'
+  + '<linearGradient id="sk1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d8e2ec"/><stop offset=".48" stop-color="#f3ecdf"/><stop offset=".72" stop-color="#e9d7bd"/><stop offset="1" stop-color="#d3bfa4"/></linearGradient>'
+  + '<radialGradient id="sun1"><stop offset="0" stop-color="#fffdf3" stop-opacity=".95"/><stop offset=".4" stop-color="#fff3dc" stop-opacity=".5"/><stop offset="1" stop-color="#fff3dc" stop-opacity="0"/></radialGradient>'
+  + '<linearGradient id="fl1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#cfc6b5"/><stop offset="1" stop-color="#9c9282"/></linearGradient>'
+  + '</defs>'
+  + '<rect width="800" height="1000" fill="#e8eef4"/><rect y="330" width="800" height="270" fill="#f1eee6"/><rect y="440" width="800" height="160" fill="#f4e7d1"/>'
+  + '<circle cx="660" cy="130" r="120" fill="#fffcf0" opacity=".62"/><circle cx="660" cy="130" r="250" fill="#fff8e4" opacity=".3"/><circle cx="660" cy="130" r="370" fill="#fff8e4" opacity=".15"/>'
+  + '<g fill="#c5ced6" opacity=".92">'
+  + '<rect x="0" y="430" width="90" height="140"/><rect x="96" y="470" width="70" height="100"/>'
+  + '<rect x="175" y="400" width="110" height="170"/><rect x="292" y="455" width="80" height="115"/>'
+  + '<rect x="380" y="425" width="120" height="145"/><rect x="508" y="390" width="90" height="180"/>'
+  + '<rect x="606" y="450" width="70" height="120"/><rect x="684" y="420" width="116" height="150"/>'
+  + '</g>'
+  + '<g fill="#b3bcc6" opacity=".6">'
+  + '<rect x="20" y="470" width="14" height="14"/><rect x="50" y="470" width="14" height="14"/>'
+  + '<rect x="120" y="500" width="12" height="12"/><rect x="150" y="500" width="12" height="12"/>'
+  + '<rect x="410" y="470" width="12" height="12"/><rect x="440" y="470" width="12" height="12"/>'
+  + '</g>'
+  + '<path d="M0 600 L800 588 L800 1000 L0 1000 Z" fill="#c9c0af"/><path d="M0 870 L800 846 L800 1000 L0 1000 Z" fill="#b4aa97"/><path d="M0 950 L800 928 L800 1000 L0 1000 Z" fill="#a79d8a"/>'
+  + '<g stroke="#7b756a" stroke-width="11" opacity=".28"><line x1="120" y1="640" x2="780" y2="628"/><line x1="0" y1="720" x2="800" y2="700"/><line x1="0" y1="840" x2="800" y2="812"/></g>'
+  + '<g stroke="#7b756a" stroke-width="6" fill="none" opacity=".85">'
+  + '<line x1="0" y1="512" x2="800" y2="504"/><line x1="0" y1="550" x2="800" y2="542"/><line x1="0" y1="588" x2="800" y2="580"/>'
+  + '</g>'
+  + '<g stroke="#7b756a" stroke-width="7" opacity=".8">'
+  + '<line x1="30" y1="512" x2="30" y2="602"/><line x1="150" y1="510" x2="150" y2="600"/>'
+  + '<line x1="270" y1="508" x2="270" y2="598"/><line x1="390" y1="506" x2="390" y2="596"/>'
+  + '<line x1="510" y1="503" x2="510" y2="593"/><line x1="580" y1="502" x2="580" y2="592"/>'
+  + '</g>'
+  + '<g><rect x="596" y="286" width="204" height="330" fill="#b3a894"/>'
+  + '<rect x="586" y="272" width="224" height="20" fill="#9d9280"/>'
+  + '<rect x="614" y="360" width="168" height="256" fill="#2b3037"/>'
+  + '<rect x="611" y="360" width="6" height="256" fill="#fff3d6" opacity=".8"/>'
+  + '<circle cx="762" cy="492" r="7" fill="#d7c296"/></g>'
+  + '<g>'
+  + '<path d="M296 574 q34 -46 68 0 q6 42 -4 80 l-10 4 q6 -50 -2 -72 q-24 -14 -46 0 q-8 22 -2 72 l-10 -4 q-10 -38 -4 -80 z" fill="#20242c"/>'
+  + '<circle cx="330" cy="566" r="27" fill="#2a2f38"/>'
+  + '<line x1="356" y1="620" x2="304" y2="656" stroke="#2a2f38" stroke-width="13" stroke-linecap="round"/>'
+  + '<path d="M302 606 q28 -14 56 0 l6 92 q-34 12 -68 0 z" fill="#2a2f38"/>'
+  + '<path d="M300 700 l60 0 l16 46 l-92 0 z" fill="#232831"/>'
+  + '<rect x="316" y="740" width="13" height="56" rx="6" fill="#2a2f38"/>'
+  + '<rect x="336" y="740" width="13" height="56" rx="6" fill="#2a2f38"/>'
+  + '<rect x="294" y="652" width="13" height="21" rx="3" fill="#f6efdd" transform="rotate(-14 300 662)"/>'
+  + '<rect x="350" y="700" width="8" height="13" rx="3" fill="#cdc7b4"/>'
+  + '</g>'
+  + '<g transform="translate(250,504)">'
+  + '<line x1="-3" y1="-19" x2="-7" y2="-4" stroke="#f5ede0" stroke-width="2.4"/>'
+  + '<line x1="4" y1="-19" x2="6" y2="-4" stroke="#f5ede0" stroke-width="2.4"/>'
+  + '<rect x="-9" y="-6" width="18" height="27" rx="3" fill="#d98b46"/>'
+  + '<rect x="-9" y="-6" width="18" height="6" fill="#e8a45e"/>'
+  + '</g>'
+  + '<g transform="translate(468,758)"><rect width="98" height="46" rx="10" fill="#4d5a72"/>'
+  + '<path d="M10 14 h78 M10 32 h78" stroke="#3b4557" stroke-width="2.4"/></g>'
+  + '<g><rect x="30" y="800" width="250" height="86" rx="12" fill="#8c8172"/>'
+  + '<ellipse cx="92" cy="806" rx="48" ry="15" fill="#6f7f5f"/>'
+  + '<ellipse cx="172" cy="802" rx="54" ry="16" fill="#7d8d68"/>'
+  + '<ellipse cx="232" cy="808" rx="38" ry="12" fill="#65754f"/>'
+  + '<circle cx="200" cy="852" r="8" fill="#f2efe4" opacity=".92"/>'
+  + '<line x1="200" y1="860" x2="200" y2="884" stroke="#8b9070" stroke-width="3"/></g>'
+  + '</svg>',
+
+  /* ---- 场景二：雨夜便利店 ---- */
+  '<svg viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+  + '<defs>'
+  + '<linearGradient id="ng2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0a121b"/><stop offset=".55" stop-color="#16232f"/><stop offset="1" stop-color="#0d151d"/></linearGradient>'
+  + '<radialGradient id="lamp2"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".5"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/></radialGradient>'
+  + '<linearGradient id="ct2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#39414b"/><stop offset="1" stop-color="#171c23"/></linearGradient>'
+  + '<filter id="b2"><feGaussianBlur stdDeviation="3.2"/></filter>'
+  + '</defs>'
+  + '<rect width="800" height="1000" fill="#0c151d"/><rect y="230" width="800" height="300" fill="#17262f"/>'
+  + '<circle cx="170" cy="150" r="80" fill="#ffd9a0" opacity=".16"/><circle cx="170" cy="150" r="170" fill="#ffd9a0" opacity=".09"/><circle cx="170" cy="150" r="260" fill="#ffd9a0" opacity=".05"/>'
+  + '<g fill="#101a24" opacity=".9"><rect x="0" y="300" width="120" height="340"/><rect x="700" y="260" width="100" height="380"/></g>'
+  + '<g stroke="#bcd6e8" stroke-width="1.6" opacity=".16">' + RAIN2 + '</g>'
+  + '<g opacity=".55" fill="#0b1219">'
+  + '<circle cx="118" cy="352" r="23"/>'
+  + '<rect x="86" y="392" width="20" height="74" rx="9"/>'
+  + '<path d="M96 378 q22 -10 44 0 l7 122 q-29 10 -58 0 z"/>'
+  + '<rect x="102" y="500" width="14" height="60" rx="7"/><rect x="122" y="500" width="14" height="60" rx="7"/>'
+  + '</g>'
+  + '<g stroke="#2a3542" stroke-width="12" fill="none"><rect x="26" y="26" width="748" height="600" rx="4"/><line x1="390" y1="26" x2="390" y2="626"/></g>'
+  + '<g opacity=".26" fill="#cfe3f0">'
+  + '<circle cx="470" cy="292" r="26"/>'
+  + '<rect x="488" y="238" width="24" height="40" rx="4" fill="#fff"/>'
+  + '<path d="M444 320 q26 -12 52 0 l9 152 q-35 12 -70 0 z"/>'
+  + '</g>'
+  + '<g fill="#9fc4d8" opacity=".12"><path d="M120 26 L200 26 L90 626 L10 626 Z"/><path d="M420 26 L452 26 L342 626 L310 626 Z"/></g>'
+  + '<g stroke="#ffffff" stroke-width="7" fill="none" opacity=".42" stroke-linecap="round">'
+  + '<path d="M616 400 q42 -22 66 4"/><path d="M614 442 q36 10 68 -8"/><path d="M648 396 l0 82"/>'
+  + '</g>'
+  + '<g fill="#3d4854"><rect x="620" y="536" width="86" height="6" rx="3"/>'
+  + '<rect x="626" y="542" width="5" height="112"/><rect x="696" y="542" width="5" height="112"/></g>'
+  + '<ellipse cx="663" cy="664" rx="56" ry="9" fill="#8fb3c9" opacity=".2"/>'
+  + '<rect x="700" y="180" width="100" height="466" fill="#0e1620"/>'
+  + '<rect x="706" y="186" width="88" height="454" fill="#162b3a"/>'
+  + '<circle cx="762" cy="420" r="8" fill="#7f8f9e"/>'
+  + '<path d="M0 640 L800 610 L800 1000 L0 1000 Z" fill="#2c333c"/><path d="M0 780 L800 756 L800 1000 L0 1000 Z" fill="#1e242b"/>'
+  + '<path d="M0 640 L800 610" stroke="#5a6672" stroke-width="5"/>'
+  + '<path d="M60 660 L260 654 L200 1000 L0 1000 Z" fill="#ffffff" opacity=".035"/>'
+  + '<g transform="translate(206,672)">'
+  + '<rect x="0" y="34" width="52" height="112" rx="8" fill="#f2ecdf"/>'
+  + '<rect x="0" y="34" width="52" height="24" rx="8" fill="#ddd2bd"/>'
+  + '<rect x="16" y="2" width="20" height="36" rx="4" fill="#e2d8c4"/>'
+  + '<rect x="9" y="74" width="34" height="30" rx="4" fill="#cfc2a8" opacity=".55"/>'
+  + '<ellipse cx="26" cy="150" rx="30" ry="6" fill="#000" opacity=".25"/>'
+  + '</g>'
+  + '<g transform="translate(276,690)">'
+  + '<rect x="0" y="30" width="46" height="98" rx="7" fill="#eae3d4"/>'
+  + '<rect x="0" y="30" width="46" height="22" rx="7" fill="#d6cab4"/>'
+  + '<rect x="14" y="2" width="18" height="32" rx="4" fill="#dbd1bd"/>'
+  + '<ellipse cx="23" cy="132" rx="26" ry="5" fill="#000" opacity=".22"/>'
+  + '</g>'
+  + '<g transform="translate(552,676) rotate(-7)">'
+  + '<rect width="50" height="92" fill="#efe9dc"/>'
+  + '<g stroke="#b9b0a0" stroke-width="2.2"><line x1="8" y1="16" x2="42" y2="16"/><line x1="8" y1="30" x2="42" y2="30"/><line x1="8" y1="44" x2="34" y2="44"/><line x1="8" y1="58" x2="40" y2="58"/><line x1="8" y1="72" x2="26" y2="72"/></g>'
+  + '</g>'
+  + '</svg>',
+
+  /* ---- 场景三：照相馆 ---- */
+  '<svg viewBox="0 0 800 1000" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">'
+  + '<defs>'
+  + '<radialGradient id="warm3"><stop offset="0" stop-color="#ffd9a0" stop-opacity=".45"/><stop offset="1" stop-color="#ffd9a0" stop-opacity="0"/></radialGradient>'
+  + '<linearGradient id="bg3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#191009"/><stop offset=".6" stop-color="#241811"/><stop offset="1" stop-color="#150d09"/></linearGradient>'
+  + '<linearGradient id="ct3" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#4a3323"/><stop offset="1" stop-color="#241812"/></linearGradient>'
+  + '<radialGradient id="red3"><stop offset="0" stop-color="#ff3b30" stop-opacity=".55"/><stop offset="1" stop-color="#ff3b30" stop-opacity="0"/></radialGradient>'
+  + '</defs>'
+  + '<rect width="800" height="1000" fill="#1a120c"/><rect y="470" width="800" height="220" fill="#22170f"/>'
+  + '<circle cx="380" cy="40" r="180" fill="#ffd9a0" opacity=".1"/><circle cx="380" cy="40" r="300" fill="#ffd9a0" opacity=".06"/><circle cx="380" cy="40" r="430" fill="#ffd9a0" opacity=".035"/>'
+  + '<line x1="380" y1="0" x2="380" y2="72" stroke="#3a2a1c" stroke-width="3"/>'
+  + '<path d="M338 72 h84 l24 48 h-132 z" fill="#c9a15f" opacity=".92"/>'
+  + '<circle cx="380" cy="130" r="16" fill="#ffe6b8" opacity=".9"/>'
+  + wall3()
+  + '<g transform="rotate(3 470 512)"><rect x="428" y="470" width="84" height="94" fill="#f7f0dd"/>'
+  + '<rect x="434" y="476" width="72" height="82" fill="#8d8270"/>'
+  + '<circle cx="470" cy="504" r="13" fill="#a89b83"/></g>'
+  + '<rect x="600" y="190" width="102" height="452" fill="#0f0a07"/>'
+  + '<rect x="598" y="190" width="9" height="452" fill="#c0392b" opacity=".75"/>'
+  + '<circle cx="650" cy="420" r="60" fill="#ff3b30" opacity=".22"/><circle cx="650" cy="420" r="105" fill="#ff3b30" opacity=".13"/><circle cx="650" cy="420" r="150" fill="#ff3b30" opacity=".07"/>'
+  + '<path d="M646 236 q22 0 22 34 l0 300" stroke="#8a6b45" stroke-width="2" fill="none" opacity=".8"/>'
+  + '<rect x="700" y="170" width="100" height="472" fill="#100a07"/>'
+  + '<rect x="708" y="178" width="86" height="456" fill="#0b1520"/>'
+  + '<rect x="716" y="186" width="70" height="440" fill="#16303f" opacity=".85"/>'
+  + '<circle cx="772" cy="520" r="8" fill="#8d7a5c"/>'
+  + '<g><rect x="496" y="46" width="92" height="112" fill="#efe6d2"/>'
+  + '<rect x="496" y="46" width="92" height="28" fill="#b8503f"/>'
+  + '<text x="542" y="67" font-size="15" fill="#fff2e2" text-anchor="middle" font-family="serif">三月</text>'
+  + '<text x="542" y="130" font-size="46" fill="#5d4a38" text-anchor="middle" font-family="serif">14</text></g>'
+  + '<path d="M0 640 L800 618 L800 1000 L0 1000 Z" fill="#3b2818"/><path d="M0 790 L800 768 L800 1000 L0 1000 Z" fill="#2a1c11"/>'
+  + '<path d="M0 640 L800 618" stroke="#6b4c34" stroke-width="5"/>'
+  + '<g transform="translate(424,538)">'
+  + '<rect x="0" y="26" width="116" height="92" rx="9" fill="#2b2c30"/>'
+  + '<rect x="0" y="18" width="116" height="20" rx="6" fill="#3f4247"/>'
+  + '<circle cx="58" cy="76" r="27" fill="#191a1d" stroke="#6d727b" stroke-width="4"/>'
+  + '<circle cx="58" cy="76" r="12" fill="#4d535c"/>'
+  + '<circle cx="58" cy="76" r="5" fill="#a9d9d0" opacity=".75"/>'
+  + '<rect x="88" y="2" width="16" height="18" rx="3" fill="#6d727b"/>'
+  + '<ellipse cx="58" cy="122" rx="60" ry="7" fill="#000" opacity=".3"/>'
+  + '</g>'
+  + '<g transform="translate(330,712) rotate(5)"><rect width="76" height="54" fill="#f4ebd8"/>'
+  + '<g stroke="#bdb19a" stroke-width="2"><line x1="8" y1="16" x2="66" y2="16"/><line x1="8" y1="28" x2="58" y2="28"/><line x1="8" y1="40" x2="64" y2="40"/></g></g>'
+  + '<g transform="translate(170,752)"><circle cx="0" cy="0" r="13" fill="#e08a46"/>'
+  + '<circle cx="-4" cy="-3" r="4" fill="#f6b071" opacity=".8"/>'
+  + '<path d="M-16 4 l-10 -8 6 14 z" fill="#d97f3d"/><path d="M16 4 l10 -8 -6 14 z" fill="#d97f3d"/></g>'
+  + '</svg>'
+];
+
+/* ---------------- 状态 ---------------- */
+
+let S = {};
+let AC = null;
+
+function newGame(){
+  S = {
+    step: 0,
+    phase: 'brief',
+    ci: 0,
+    found: {},
+    clues: [],
+    stability: 3,
+    hints: [0, 0, 0],
+    badClicks: 0,
+    mute: false,
+    picks: [],
+    log: [],
+    wrongOpts: [],
+    modal: false,
+    fail: false,
+    finaleDone: false
+  };
+  try { S.mute = localStorage.getItem('llgc_mute') === '1'; } catch (e) {}
+}
+
+/* ---------------- 音效 ---------------- */
+
+function ensureAC(){
+  try {
+    if (!AC) AC = new (window.AudioContext || window.webkitAudioContext)();
+    if (AC.state === 'suspended') AC.resume();
+    return AC;
+  } catch (e) { return null; }
+}
+
+function beep(f1, f2, dur, type, vol){
+  if (S.mute) return;
+  const a = ensureAC(); if (!a) return;
+  const o = a.createOscillator(), g = a.createGain();
+  o.type = type || 'sine';
+  const t = a.currentTime;
+  o.frequency.setValueAtTime(f1, t);
+  o.frequency.exponentialRampToValueAtTime(Math.max(30, f2), t + dur);
+  g.gain.setValueAtTime(vol || 0.045, t);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  o.connect(g); g.connect(a.destination);
+  o.start(t); o.stop(t + dur + 0.03);
+}
+
+function noise(dur, vol, hp){
+  if (S.mute) return;
+  const a = ensureAC(); if (!a) return;
+  const n = Math.floor(a.sampleRate * dur);
+  const buf = a.createBuffer(1, n, a.sampleRate);
+  const d = buf.getChannelData(0);
+  for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
+  const src = a.createBufferSource(); src.buffer = buf;
+  const f = a.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp || 1400;
+  const g = a.createGain(); g.gain.value = vol || 0.08;
+  src.connect(f); f.connect(g); g.connect(a.destination);
+  src.start();
+}
+
+function sfx(name){
+  if (S.mute) return;
+  switch (name) {
+    case 'tap': beep(760, 620, 0.06, 'sine', 0.03); break;
+    case 'clue': beep(880, 1320, 0.12, 'triangle', 0.05); break;
+    case 'shutter': noise(0.09, 0.09, 2200); beep(1500, 400, 0.09, 'square', 0.03); break;
+    case 'clap': noise(0.06, 0.12, 800); break;
+    case 'glitch': beep(220, 60, 0.35, 'sawtooth', 0.06); noise(0.2, 0.05, 300); break;
+    case 'chime': beep(660, 660, 0.5, 'sine', 0.04); setTimeout(function(){ beep(990, 990, 0.6, 'sine', 0.035); }, 120); break;
+    case 'bad': beep(300, 120, 0.25, 'square', 0.05); break;
+  }
+}
+
+/* ---------------- 流程 ---------------- */
+
+const FLOW = [];
+FLOW.push({type: 'title'});
+FLOW.push({type: 'story', blocks: PROLOGUE, next: '继续'});
+CASES.forEach(function(c, i){
+  FLOW.push({type: 'case', i: i});
+  if (c.after) FLOW.push({type: 'story', blocks: c.after, next: '继续'});
+});
+FLOW.push({type: 'finale'});
+FLOW.push({type: 'ending'});
+
+function startCase(i){
+  S.ci = i;
+  S.phase = 'brief';
+  S.log = [];
+  S.modal = false;
+  S.fail = false;
+  S.wrongOpts = [];
+}
+
+function go(n){
+  S.step += (n || 1);
+  const st = FLOW[S.step];
+  if (st && st.type === 'case') startCase(st.i);
+  render();
+}
+
+/* ---------------- 渲染 ---------------- */
+
+const screenEl = function(){ return document.getElementById('screen'); };
+
+function esc(s){
+  return String(s).replace(/[&<>"]/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];
+  });
+}
+
+const NAMES = { lu: '陆光', cheng: '程小时', gu: '顾晚', qiao: '乔苓' };
+
+function chatHTML(){
+  if (!S.log.length) return '<div class="msg sys">点击照片里的光点，看看那里有什么。</div>';
+  return S.log.map(function(m){
+    if (m.w === 'obs') return '<div class="msg obs">' + esc(m.t) + '</div>';
+    if (m.w === 'sys') return '<div class="msg sys">' + esc(m.t) + '</div>';
+    if (m.w === 'clue') return '<div class="msg clue">◇ ' + esc(m.t) + '</div>';
+    return '<div class="msg ' + m.w + '">' + esc(m.t) + '</div>';
+  }).join('');
+}
+
+function push(w, t){
+  S.log.push({w: w, t: t});
+  if (S.log.length > 40) S.log.shift();
+}
+
+function render(){
+  const el = screenEl();
+  const st = FLOW[S.step] || {type: 'ending'};
+  let html = '', cls = 'screen';
+
+  if (st.type === 'title') {
+    html = titleHTML();
+  } else if (st.type === 'story') {
+    cls = 'screen flow';
+    html = storyHTML(st);
+  } else if (st.type === 'case') {
+    cls = (S.phase === 'photo') ? 'screen lock' : 'screen flow';
+    html = caseHTML(CASES[st.i]);
+  } else if (st.type === 'finale') {
+    cls = 'screen flow';
+    html = finaleHTML();
+  } else {
+    cls = 'screen flow';
+    html = endingHTML();
+  }
+
+  el.className = cls;
+  el.innerHTML = html;
+  el.scrollTop = 0;
+
+  const chat = document.getElementById('chat');
+  if (chat) chat.scrollTop = chat.scrollHeight;
+
+  const muteBtn = document.getElementById('mutebtn');
+  if (muteBtn) muteBtn.textContent = S.mute ? '🔇' : '🔊';
+}
+
+function titleHTML(){
+  return '<button class="mute" id="mutebtn" data-act="mute">' + (S.mute ? '🔇' : '🔊') + '</button>'
+    + '<div class="title-wrap">'
+    + '<div class="brand">时光照相馆</div>'
+    + '<div class="title">定格</div>'
+    + '<div class="subtitle">无论过去，不问将来</div>'
+    + '<div class="title-photo"></div>'
+    + '<button class="btn primary" data-act="go">推开照相馆的门</button>'
+    + '<div class="hint-line">三张照片，三个中午、深夜与黄昏。<br>点开照片里的光点，把那一格时间看清楚。<br>红色的光点是禁区——碰了，过去就会变。</div>'
+    + '</div>'
+    + '<div class="footnote">基于《时光代理人》二次创作 · 非官方同人小游戏</div>';
+}
+
+function storyHTML(st){
+  const blocks = st.blocks.map(function(b, i){
+    const d = (0.08 * i).toFixed(2) + 's';
+    if (b.k === 'p') return '<div class="para" style="animation-delay:' + d + '">' + esc(b.t) + '</div>';
+    return '<div class="dlg ' + b.k + '" style="animation-delay:' + d + '">'
+      + '<div class="name">' + (NAMES[b.k] || '') + '</div>'
+      + '<div class="txt">' + esc(b.t) + '</div></div>';
+  }).join('');
+  return '<div class="story">' + blocks + '</div>'
+    + '<div style="flex:0 0 auto;margin-top:auto;padding-top:12px"><button class="btn primary" data-act="go">' + (st.next || '继续') + '</button></div>';
+}
+
+function caseHTML(C){
+  if (S.phase === 'brief') return briefHTML(C);
+  if (S.phase === 'truth') return truthHTML(C);
+  return photoHTML(C);
+}
+
+function briefHTML(C){
+  const msgs = C.brief.map(function(m){
+    if (m.w === 'sys') return '<div class="msg sys">' + esc(m.t) + '</div>';
+    return '<div class="msg ' + m.w + '">' + esc(m.t) + '</div>';
+  }).join('');
+  return '<div style="display:flex;justify-content:space-between;align-items:baseline;padding:4px 2px 10px">'
+    + '<div style="font-size:10.5px;letter-spacing:.3em;color:#6d8296">第 ' + C.no + ' 张照片</div>'
+    + '<div style="font-size:10.5px;color:#6d8296">' + esc(C.meta || '') + '</div></div>'
+    + '<div style="font-family:\'Songti SC\',serif;font-size:26px;letter-spacing:.1em;color:#eaf2fa;padding:0 2px 4px">' + esc(C.title) + '</div>'
+    + '<div style="font-size:11.5px;color:#7f93a8;padding:0 2px 14px">' + esc(C.place) + ' · ' + esc(C.time) + '</div>'
+    + '<div class="chat" style="flex:1 1 auto">' + msgs + '</div>'
+    + '<div style="flex:0 0 auto;margin-top:auto;padding-top:12px">'
+    + '<button class="btn primary" data-act="clap">✋ 与陆光击掌，进入照片</button></div>';
+}
+
+function photoHTML(C){
+  const clueList = S.clues.filter(function(c){ return c.c === S.ci; });
+  const chips = clueList.length
+    ? clueList.map(function(c){ return '<span class="chip">' + esc(c.name) + '</span>'; }).join('')
+    : '<span class="chip empty">还没有线索</span>';
+
+  let n = 0;
+  const hs = C.hotspots.map(function(h){
+    let label;
+    if (h.bad) label = '!';
+    else { n++; label = String(n); }
+    const done = !!S.found[h.id];
+    if (done && !h.bad) label = '✓';
+    if (done && h.bad) label = '✕';
+    return '<button class="hs ' + (h.bad ? 'bad ' : '') + (done ? 'done' : '') + '"'
+      + ' style="left:' + h.x + '%;top:' + h.y + '%" data-act="hs" data-id="' + h.id + '"'
+      + ' aria-label="' + esc(h.name) + '"><span class="ring"></span><span class="dot">' + label + '</span></button>';
+  }).join('');
+
+  let dots = '';
+  for (let k = 0; k < 3; k++) dots += '<i class="' + (k < S.stability ? 'on' : '') + '"></i>';
+
+  return '<div class="ptop"><span>第 <b>' + C.no + '</b> 张 · ' + esc(C.time) + '</span>'
+    + '<span class="stab" title="时间线稳定度"><em>稳定度</em>' + dots + '</span></div>'
+    + '<div class="photo">' + SCENES[S.ci] + '<div class="develop"></div><div class="vign"></div><div class="grain"></div>' + hs + '</div>'
+    + '<div class="cluebar">' + chips + '</div>'
+    + '<div class="chat" id="chat">' + chatHTML() + '</div>'
+    + '<div class="actions">'
+    + '<button class="btn ghost" data-act="hint">陆光，提示</button>'
+    + '<button class="btn primary" data-act="deduce">推理</button>'
+    + '</div>'
+    + (S.modal ? modalHTML(C) : '')
+    + (S.fail ? failHTML() : '');
+}
+
+function modalHTML(C){
+  const opts = C.options.map(function(o, i){
+    const dim = S.wrongOpts.indexOf(i) >= 0;
+    return '<button class="opt ' + (dim ? 'dim' : '') + '" data-act="opt" data-i="' + i + '">'
+      + String.fromCharCode(65 + i) + '．' + esc(o.t) + '</button>';
+  }).join('');
+  const own = C.hotspots.filter(function(h){ return !h.bad; });
+  const all = own.filter(function(h){ return S.found[h.id]; }).length;
+  return '<div class="modal"><div class="sheet">'
+    + '<div class="kicker">推理 · 第 ' + C.no + ' 张</div>'
+    + '<div class="q">' + esc(C.question) + '</div>'
+    + opts
+    + '<div class="tip">已看清 ' + all + ' / ' + own.length + ' 处 · 答错不扣时间，但陆光会记着</div>'
+    + '<button class="btn ghost" data-act="closemodal" style="margin-top:8px">再回去看看</button>'
+    + '</div></div>';
+}
+
+function failHTML(){
+  return '<div class="modal"><div class="sheet" style="text-align:center">'
+    + '<div class="kicker">时间线偏移</div>'
+    + '<div class="q" style="font-size:19px">你改变了不该改变的那一格。</div>'
+    + '<div class="tip" style="margin-bottom:14px">照片把你吐了出来。这一张要重新看一遍。</div>'
+    + '<button class="btn primary" data-act="retry">重新进入照片</button>'
+    + '</div></div>';
+}
+
+function truthHTML(C){
+  const paras = C.truth.map(function(t, i){
+    const d = (0.12 * i).toFixed(2) + 's';
+    return '<div class="para" style="animation-delay:' + d + '">' + esc(t) + '</div>';
+  }).join('');
+  return '<div class="truth">'
+    + '<div class="kicker">真相 · 第 ' + C.no + ' 张</div>'
+    + paras
+    + '<div class="para soft" style="animation-delay:' + (0.12 * C.truth.length).toFixed(2) + 's;margin-top:22px;border-top:1px solid rgba(255,255,255,.1);padding-top:16px">' + esc(C.tail || '') + '</div>'
+    + '</div>'
+    + '<div style="flex:0 0 auto;margin-top:auto;padding-top:10px"><button class="btn primary" data-act="go">合上这张照片</button></div>';
+}
+
+function finaleHTML(){
+  const cards = FINALE_CARDS.map(function(c){
+    const on = S.picks.indexOf(c.id) >= 0;
+    return '<button class="card ' + (on ? 'on' : '') + '" data-act="pick" data-id="' + c.id + '">' + esc(c.name) + '</button>';
+  }).join('');
+
+  let body = '';
+  if (S.finaleDone) {
+    const lines = S.picks.map(function(id){ return FINALE_LINES[id] || ''; });
+    body = '<div class="truth" style="margin-top:0">'
+      + lines.map(function(t, i){
+          return '<div class="para" style="animation-delay:' + (0.3 * i).toFixed(2) + 's">' + esc(t) + '</div>';
+        }).join('')
+      + '<div class="para" style="animation-delay:1.1s;color:#a9d9d0">「所以那天晚上，他不是一个人回家的。」</div>'
+      + '<div class="para" style="animation-delay:1.4s;color:#a9d9d0">「他有一把伞，两瓶牛奶，和一整面墙的人在看着他笑。」</div>'
+      + '</div>'
+      + '<button class="btn primary" data-act="go" style="margin-top:18px">把答案交给她</button>';
+  } else {
+    body = '<div class="q" style="font-family:\'Songti SC\',serif;font-size:17px;line-height:1.8;color:#eaf2fa;margin:4px 0 6px">'
+      + '顾晚问：他最后，过得好吗？</div>'
+      + '<div class="tip" style="font-size:12px;color:#8b9bad;line-height:1.8">从三张照片里，挑出三样能回答她的东西。<br>不多不少，三样。</div>'
+      + '<div class="cards">' + cards + '</div>'
+      + '<button class="btn primary" data-act="submitPicks">' + (S.picks.length === 3 ? '把这三样放在她面前' : '还差 ' + (3 - S.picks.length) + ' 样') + '</button>';
+  }
+
+  return '<div style="font-size:10.5px;letter-spacing:.3em;color:#6d8296;padding:6px 2px 10px">终章 · 拼出答案</div>'
+    + '<div class="finale">' + body + '</div>';
+}
+
+function endingHTML(){
+  const total = S.clues.length;
+  return '<div class="truth" style="padding-top:20px">'
+    + '<div class="kicker">尾声</div>'
+    + '<div class="para">顾晚把三张照片收进信封，站起来，鞠了一躬。</div>'
+    + '<div class="para">她走到门口，风铃响了。</div>'
+    + '<div class="para">乔苓说：「她没哭。」</div>'
+    + '<div class="para">程小时看着门外：「哭了。在台阶上。」</div>'
+    + '<div class="para">陆光合上登记本，在最后一页写下日期。</div>'
+    + '<div class="para" style="margin-top:26px;font-size:17px;color:#a9d9d0;text-align:center;letter-spacing:.1em">「无论过去，不问将来。」</div>'
+    + '<div style="margin-top:30px;padding:14px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)">'
+    + '<div style="font-size:11px;letter-spacing:.24em;color:#6d8296;margin-bottom:8px">本次记录</div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:#c4d2e0;line-height:2">'
+    + '<span>收集线索</span><span>' + total + ' / 18</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:#c4d2e0;line-height:2">'
+    + '<span>触碰禁区</span><span>' + S.badClicks + ' 次' + (S.badClicks === 0 ? '（手很稳）' : '') + '</span></div>'
+    + '<div style="display:flex;justify-content:space-between;font-size:12.5px;color:#c4d2e0;line-height:2">'
+    + '<span>照片</span><span>3 / 3</span></div>'
+    + '</div>'
+    + '<button class="btn ghost" data-act="restart" style="margin-top:20px">再走一遍这三张照片</button>'
+    + '</div>';
+}
+
+/* ---------------- 交互 ---------------- */
+
+function flash(kind){
+  const fx = document.getElementById('fx');
+  fx.className = 'fx ' + kind;
+  setTimeout(function(){ fx.className = 'fx'; }, 620);
+}
+
+function shake(){
+  document.body.classList.remove('shk');
+  void document.body.offsetWidth;
+  document.body.classList.add('shk');
+  setTimeout(function(){ document.body.classList.remove('shk'); }, 460);
+}
+
+function onHotspot(id){
+  const C = CASES[S.ci];
+  const h = C.hotspots.filter(function(x){ return x.id === id; })[0];
+  if (!h) return;
+
+  if (h.bad) {
+    const again = !!S.found[id];
+    S.found[id] = true;
+    S.badClicks++;
+    S.stability--;
+    sfx('glitch');
+    flash('red');
+    shake();
+    push('obs', again ? '你又把手伸向了那里。画面抖得很厉害，像一张被水泡过的相纸。' : h.text);
+    push('lu', h.after);
+    if (S.stability <= 0) {
+      S.stability = 3;
+      S.fail = true;
+    }
+    render();
+    return;
+  }
+
+  if (S.found[id]) {
+    push('sys', '这里已经看过了。');
+    sfx('tap');
+    render();
+    return;
+  }
+
+  S.found[id] = true;
+
+  sfx('clue');
+  push('obs', h.text);
+  if (h.after) push('lu', h.after);
+  S.clues.push({name: h.clue, c: S.ci});
+  push('clue', '线索：' + h.clue);
+  const ownAll = C.hotspots.filter(function(x){ return !x.bad; });
+  if (ownAll.every(function(x){ return S.found[x.id]; })) {
+    push('sys', '线索齐了。可以推理了。');
+  }
+  render();
+}
+
+function openModal(){
+  const C = CASES[S.ci];
+  const own = C.hotspots.filter(function(h){ return !h.bad; });
+  const got = own.filter(function(h){ return S.found[h.id]; }).length;
+  if (got < own.length) {
+    sfx('bad');
+    push('sys', '照片里还有 ' + (own.length - got) + ' 处没看清。');
+    push('lu', '再看一眼。别急着下结论。');
+    render();
+    return;
+  }
+  sfx('tap');
+  S.modal = true;
+  render();
+}
+
+function chooseOpt(i){
+  const C = CASES[S.ci];
+  const o = C.options[i];
+  if (!o || S.wrongOpts.indexOf(i) >= 0) return;
+
+  if (o.ok) {
+    sfx('chime');
+    S.modal = false;
+    S.phase = 'truth';
+    render();
+    return;
+  }
+
+  sfx('bad');
+  shake();
+  S.wrongOpts.push(i);
+  if (o.fb) push('lu', o.fb);
+  else push('lu', '不是这个。');
+  render();
+}
+
+function hint(){
+  const C = CASES[S.ci];
+  const n = S.hints[S.ci] || 0;
+  if (n >= C.hints.length) {
+    push('lu', '该说的我都说完了。剩下的，你得自己看。');
+  } else {
+    push('lu', C.hints[n]);
+    S.hints[S.ci] = n + 1;
+  }
+  sfx('tap');
+  render();
+}
+
+function clap(){
+  sfx('clap');
+  flash('white');
+  setTimeout(function(){
+    sfx('shutter');
+    S.phase = 'photo';
+    S.log = [];
+    push('lu', '进去以后，别乱动。');
+    push('cheng', '知道了。');
+    render();
+  }, 420);
+}
+
+function pick(id){
+  const i = S.picks.indexOf(id);
+  if (i >= 0) { S.picks.splice(i, 1); }
+  else {
+    if (S.picks.length >= 3) { push('sys', '只能选三样。'); render(); return; }
+    S.picks.push(id);
+  }
+  sfx('tap');
+  render();
+}
+
+function submitPicks(){
+  if (S.picks.length !== 3) return;
+  const wrong = S.picks.filter(function(id){
+    const c = FINALE_CARDS.filter(function(x){ return x.id === id; })[0];
+    return !c || !c.ok;
+  });
+  if (wrong.length) {
+    sfx('bad');
+    shake();
+    push('lu', '再想想。这三样里，有一样是别人的故事。');
+    S.picks = [];
+    render();
+    return;
+  }
+  // 顺序无所谓，但按 a3 -> b1 -> c1 排好
+  const order = ['a3', 'b1', 'c1'];
+  S.picks = order.filter(function(id){ return S.picks.indexOf(id) >= 0; });
+  S.finaleDone = true;
+  sfx('chime');
+  render();
+}
+
+/* ---------------- 事件 ---------------- */
+
+document.addEventListener('click', function(e){
+  const t = e.target.closest('[data-act]');
+  if (!t) return;
+  const act = t.getAttribute('data-act');
+  ensureAC();
+
+  switch (act) {
+    case 'go': go(1); break;
+    case 'clap': clap(); break;
+    case 'hs': onHotspot(t.getAttribute('data-id')); break;
+    case 'hint': hint(); break;
+    case 'deduce': openModal(); break;
+    case 'opt': chooseOpt(parseInt(t.getAttribute('data-i'), 10)); break;
+    case 'closemodal': S.modal = false; render(); break;
+    case 'retry': {
+      const C = CASES[S.ci];
+      C.hotspots.forEach(function(h){ delete S.found[h.id]; });
+      S.clues = S.clues.filter(function(c){ return c.c !== S.ci; });
+      S.log = [];
+      S.stability = 3;
+      S.fail = false;
+      S.modal = false;
+      S.wrongOpts = [];
+      push('lu', '记住：红色的，别碰。');
+      render();
+      break;
+    }
+    case 'pick': pick(t.getAttribute('data-id')); break;
+    case 'submitPicks': submitPicks(); break;
+    case 'mute': {
+      S.mute = !S.mute;
+      try { localStorage.setItem('llgc_mute', S.mute ? '1' : '0'); } catch (err) {}
+      render();
+      break;
+    }
+    case 'restart': newGame(); render(); break;
+  }
+});
+
+/* ---------------- 启动 ---------------- */
+
+newGame();
+render();
+</script>
+</body>
+</html>
